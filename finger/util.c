@@ -368,6 +368,7 @@ PERSON *palloc(void) {
 		eprintf("finger: Out of space.\n");
 		exit(1);
 	}
+	memset(p, 0, sizeof(PERSON));
 	return(p);
 }
 
@@ -380,6 +381,7 @@ walloc(PERSON *pn)
 		eprintf("finger: Out of space.\n");
 		exit(1);
 	}
+	memset(w, 0, sizeof(WHERE));
 	if (pn->whead == NULL)
 		pn->whead = pn->wtail = w;
 	else {
