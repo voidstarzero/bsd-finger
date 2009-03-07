@@ -235,28 +235,35 @@ static void do_local(int argc, char *argv[], int *used) {
 	int i;
 	struct passwd *pw;
 
+	for (i = 0; i < argc; i++) {
+		if (used[i] >= 0 && (pw = getpwnam(argv[i]))) {
+			if (!check_nofinger(pw)) {
+				enter_person(pw);
+				used[i] = 1;
+			}
+		}
+	}
 	/*
-	 * traverse the list of possible login names and check the login name
-	 * and real name against the name specified by the user.
+	 * Traverse the list of users and check the real name against
+	 * the name specified by the user.
+	 *
+	 * Since we've already entered users whose usernames match,
+	 * ignore them when doing real name matching.
 	 */
-	if (mflag) {
-		for (i = 0; i < argc; i++)
-			if (used[i] >= 0 && (pw = getpwnam(argv[i]))) {
-				if (!check_nofinger(pw)) {
-					enter_person(pw);
-					used[i] = 1;
+	if (!mflag) {
+		for (pw = getpwent(); pw; pw = getpwent()) {
+			for (i = 0; i < argc; i++) {
+				if (used[i] >= 0 &&
+				    strcasecmp(pw->pw_name, argv[i]) &&
+				    match(pw, argv[i])) {
+					if (!check_nofinger(pw)) {
+						enter_person(pw);
+						used[i] = 1;
+					}
 				}
 			}
-	} else for (pw = getpwent(); pw; pw = getpwent())
-		for (i = 0; i < argc; i++)
-			if (used[i] >= 0 &&
-			    (!strcasecmp(pw->pw_name, argv[i]) ||
-			    match(pw, argv[i]))) {
-				if (!check_nofinger(pw)) {
-					enter_person(pw);
-					used[i] = 1;
-				}
-			}
+		}
+	}
 
 	/* list errors */
 	for (i = 0; i < argc; i++)
