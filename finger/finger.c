@@ -77,7 +77,7 @@ char finger_rcsid[] = \
 #include "../version.h"
 
 static void loginlist(void);
-static void userlist(int argc, char *argv[]);
+static int userlist(int argc, char *argv[]);
 
 int lflag, pplan;
 static int sflag, mflag;
@@ -92,6 +92,7 @@ int entries;			/* number of people */
 
 int main(int argc, char *argv[]) {
 	int ch;
+	int err = 0;
 	struct sockaddr_in sin;
 	socklen_t slen = sizeof(sin);
 
@@ -159,7 +160,7 @@ int main(int argc, char *argv[]) {
 		}
 	} 
 	else {
-		userlist(argc, argv);
+		err = userlist(argc, argv);
 		/*
 		 * Assign explicit "large" format if names given and -s not
 		 * explicitly stated.  Force the -l AFTER we get names so any
@@ -172,7 +173,7 @@ int main(int argc, char *argv[]) {
 		if (lflag) lflag_print();
 		else sflag_print();
 	}
-	return 0;
+	return err;
 }
 
 /* Returns 1 if .nofinger is found and enable_nofinger is set. */
@@ -264,10 +265,11 @@ static void do_local(int argc, char *argv[], int *used) {
 
 }
 
-static void
+static int
 userlist(int argc, char *argv[])
 {
 	int i;
+	int err = 0;
 	PERSON *pn;
 	PERSON *nethead, **nettail;
 	struct utmp *uptr;
@@ -297,13 +299,13 @@ userlist(int argc, char *argv[])
 
 	/* handle network requests */
 	for (pn = nethead; pn; pn = pn->next) {
-		netfinger(pn->name);
+		err |= netfinger(pn->name);
 		if (pn->next || entries)
 			xputc('\n');
 	}
 
 	if (entries == 0)
-		return;
+		return err;
 
 	/*
 	 * Scan thru the list of users currently logged in, saving
@@ -331,4 +333,6 @@ userlist(int argc, char *argv[])
 		enter_lastlog(pn);
 	}
 	endutent();
+
+	return err;
 }

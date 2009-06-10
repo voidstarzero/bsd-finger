@@ -92,7 +92,7 @@ void sflag_print(void);
 void enter_where(struct utmp *ut, PERSON *pn);
 void enter_lastlog(PERSON *pn);
 int match(struct passwd *pw, const char *user);
-void netfinger(const char *name);
+int netfinger(const char *name);
 const char *prphone(const char *num);
 
 #ifndef DAYSPERNYEAR

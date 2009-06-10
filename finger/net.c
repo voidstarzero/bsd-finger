@@ -51,7 +51,7 @@ char net_rcsid[] = "$Id: net.c,v 1.9 1999/09/14 10:51:11 dholland Exp $";
 #include <ctype.h>
 #include "finger.h"
 
-void netfinger(const char *name) {
+int netfinger(const char *name) {
 	register FILE *fp;
 	struct in_addr defaddr;
 	register int c, sawret, ateol;
@@ -62,7 +62,7 @@ void netfinger(const char *name) {
 	char *alist[1], *host;
 
 	host = strrchr(name, '@');
-	if (!host) return;
+	if (!host) return 1;
 	*host++ = '\0';
 
 	memset(&sn, 0, sizeof(sn));
@@ -70,7 +70,7 @@ void netfinger(const char *name) {
 	sp = getservbyname("finger", "tcp");
 	if (!sp) {
 		eprintf("finger: tcp/finger: unknown service\n");
-		return;
+		return 1;
 	}
 	sn.sin_port = sp->s_port;
 
@@ -78,7 +78,7 @@ void netfinger(const char *name) {
 	if (!hp) {
 		if (!inet_aton(host, &defaddr)) {
 			eprintf("finger: unknown host: %s\n", host);
-			return;
+			return 1;
 		}
 		def.h_name = host;
 		def.h_addr_list = alist;
@@ -96,7 +96,7 @@ void netfinger(const char *name) {
 
 	if ((s = socket(hp->h_addrtype, SOCK_STREAM, 0)) < 0) {
 		eprintf("finger: socket: %s\n", strerror(errno));
-		return;
+		return 1;
 	}
 
 	/* print hostname before connecting, in case it takes a while */
@@ -104,7 +104,7 @@ void netfinger(const char *name) {
 	if (connect(s, (struct sockaddr *)&sn, sizeof(sn)) < 0) {
 		eprintf("finger: connect: %s\n", strerror(errno));
 		close(s);
-		return;
+		return 1;
 	}
 
 	/* -l flag for remote fingerd  */
@@ -128,7 +128,7 @@ void netfinger(const char *name) {
 	if (!fp) {
 		eprintf("finger: fdopen: %s\n", strerror(errno));
 		close(s);
-		return;
+		return 1;
 	}
 
 	sawret = 0;
@@ -152,4 +152,6 @@ void netfinger(const char *name) {
 	}
 	if (!ateol) xputc('\n');
 	fclose(fp);
+
+	return 0;
 }
