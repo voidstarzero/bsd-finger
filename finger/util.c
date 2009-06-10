@@ -64,7 +64,7 @@ static void find_idle_and_ttywrite(register WHERE *w) {
 	struct stat sb;
 
 	/* No device for X console. Utmp entry by XDM login (":0"). */
-	if (w->tty[0] == ':') {
+	if (strchr(w->tty, ':')) {
 		w->idletime = 0;  /* would be nice to have it emit ??? */
 		w->writable = 0;
 		return;
