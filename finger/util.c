@@ -109,9 +109,8 @@ static void userinfo(PERSON *pn, struct passwd *pw) {
 	 * fields[3] -> homephone
 	 */
 	nfields = 0;
-	for (p = strtok(bp, ","); p; p = strtok(NULL, ",")) {
-		if (*p==0) p = NULL;  // skip empties
-		if (nfields < 4) fields[nfields++] = p;
+	while ((p = strsep(&bp, ","))) {
+		if (nfields < 4) fields[nfields++] = *p ? p : NULL;
 	}
 	while (nfields<4) fields[nfields++] = NULL;
 
@@ -151,7 +150,6 @@ static void userinfo(PERSON *pn, struct passwd *pw) {
 		pn->realname = rname;
 	}
 	else {
-		/* allow for the possibility of an empty gecos */
 		pn->realname = NULL;
 	}
 
