@@ -182,6 +182,8 @@ match(struct passwd *pw, const char *user)
 	int i, j, ct, rv=0;
 	char *rname;
 
+	if (pw->pw_gecos == NULL) return 0;
+
 	strncpy(tbuf, pw->pw_gecos, TBUFLEN);
 	tbuf[TBUFLEN-1] = 0;  /* guarantee null termination */
 	p = tbuf;
