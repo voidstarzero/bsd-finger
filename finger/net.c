@@ -53,13 +53,12 @@ char net_rcsid[] = "$Id: net.c,v 1.9 1999/09/14 10:51:11 dholland Exp $";
 
 int netfinger(const char *name) {
 	register FILE *fp;
-	struct in_addr defaddr;
 	register int c, sawret, ateol;
-	struct hostent *hp, def;
+	struct addrinfo hints, *result, *resptr;
 	struct servent *sp;
-	struct sockaddr_in sn;
-	int s;
-	char *alist[1], *host;
+	struct sockaddr_storage sn;
+	int s, status;
+	char *host;
 
 	host = strrchr(name, '@');
 	if (!host) return 1;
@@ -72,38 +71,46 @@ int netfinger(const char *name) {
 		eprintf("finger: tcp/finger: unknown service\n");
 		return 1;
 	}
-	sn.sin_port = sp->s_port;
+	memset(&hints, 0, sizeof(hints));
+	hints.ai_flags  = AI_CANONNAME | AI_ADDRCONFIG;
+	hints.ai_family = AF_UNSPEC;
+	hints.ai_socktype = SOCK_STREAM;
+	hints.ai_protocol = IPPROTO_TCP;
 
-	hp = gethostbyname(host);
-	if (!hp) {
-		if (!inet_aton(host, &defaddr)) {
-			eprintf("finger: unknown host: %s\n", host);
-			return 1;
-		}
-		def.h_name = host;
-		def.h_addr_list = alist;
-		def.h_addr = (char *)&defaddr;
-		def.h_length = sizeof(struct in_addr);
-		def.h_addrtype = AF_INET;
-		def.h_aliases = 0;
-		hp = &def;
-	}
-	sn.sin_family = hp->h_addrtype;
-	if (hp->h_length > (int)sizeof(sn.sin_addr)) {
-	    hp->h_length = sizeof(sn.sin_addr);
-	}
-	memcpy(&sn.sin_addr, hp->h_addr, hp->h_length);
-
-	if ((s = socket(hp->h_addrtype, SOCK_STREAM, 0)) < 0) {
-		eprintf("finger: socket: %s\n", strerror(errno));
+	status = getaddrinfo(host, "finger", &hints, &result);
+	if (status != 0) {
+		eprintf("finger: unknown host: %s\n", host);
+		eprintf("getaddrinfo: %s\n", gai_strerror(status));
 		return 1;
 	}
 
-	/* print hostname before connecting, in case it takes a while */
-	xprintf("[%s]\n", hp->h_name);
-	if (connect(s, (struct sockaddr *)&sn, sizeof(sn)) < 0) {
+	for ( resptr = result; resptr; resptr = resptr->ai_next) {
+
+		if ((s = socket(resptr->ai_family, resptr->ai_socktype,
+				resptr->ai_protocol)) < 0)
+			continue;
+
+
+		/* print hostname before connecting, in case it takes a while */
+		/* This should probably be removed. */
+		/* xprintf("[%s]\n", result->ai_canonname); */
+
+		if (connect(s, resptr->ai_addr, resptr->ai_addrlen) < 0) {
+			close(s);
+			continue;
+		}
+
+		/* Connection is now established.
+		/* Assemble the gained information. */
+		memcpy(&sn, resptr->ai_addr, resptr->ai_addrlen);
+		break;
+	}
+
+	freeaddrinfo(result);
+
+	if ( resptr == NULL ) {
+		/* Last error is still providing the correct clue. */
 		eprintf("finger: connect: %s\n", strerror(errno));
-		close(s);
 		return 1;
 	}
 
