@@ -111,7 +111,7 @@ main(int argc, char *argv[])
 	int k, nusers;
 	char *s, *t;
 	const char *fingerpath = NULL;
-	struct sockaddr_in sn;
+	struct sockaddr_storage sn;
 	socklen_t sval = sizeof(sn);
 
 
@@ -181,11 +181,13 @@ main(int argc, char *argv[])
 	}
 
 	if (welcome) {
-		char buf[256];
+		char buf[256] = "";
 		struct hostent *hp;
 		struct utsname utsname;
 
 		uname(&utsname);
+		/* gethostbyname() only retrieves the local hostname.
+		 * This does not disturb IPv6 in any manner. */
 		gethostname(buf, sizeof(buf));
 		if ((hp = gethostbyname(buf))) {
 			/* paranoia: dns spoofing? */
