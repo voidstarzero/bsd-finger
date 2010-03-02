@@ -49,7 +49,17 @@ char net_rcsid[] = "$Id: net.c,v 1.9 1999/09/14 10:51:11 dholland Exp $";
 #include <string.h>
 #include <unistd.h>
 #include <ctype.h>
+#include <signal.h>
 #include "finger.h"
+
+#if ! defined(FINGER_TIMEOUT) || FINGER_TIMEOUT < 1
+# define FINGER_TIMEOUT 5
+#endif
+
+static void trivial_alarm(int sig) {
+	/* Just to trigger EINTR, and to later use it. */
+	return;
+}
 
 int netfinger(const char *name) {
 	register FILE *fp;
@@ -57,6 +67,7 @@ int netfinger(const char *name) {
 	struct addrinfo hints, *result, *resptr;
 	struct servent *sp;
 	struct sockaddr_storage sn;
+	struct sigaction sigact, oldsigact;
 	int s, status;
 	char *host;
 
@@ -77,6 +88,10 @@ int netfinger(const char *name) {
 	hints.ai_socktype = SOCK_STREAM;
 	hints.ai_protocol = IPPROTO_TCP;
 
+	sigact.sa_handler = trivial_alarm;
+	sigemptyset(&sigact.sa_mask);
+	sigact.sa_flags = 0;
+
 	status = getaddrinfo(host, "finger", &hints, &result);
 	if (status != 0) {
 		eprintf("finger: unknown host: %s\n", host);
@@ -95,13 +110,21 @@ int netfinger(const char *name) {
 		/* This should probably be removed. */
 		/* xprintf("[%s]\n", result->ai_canonname); */
 
+		sigaction(SIGALRM, &sigact, &oldsigact);
+		alarm(FINGER_TIMEOUT);
+
 		if (connect(s, resptr->ai_addr, resptr->ai_addrlen) < 0) {
+			if ( errno == EINTR )
+				errno = ETIMEDOUT;
 			close(s);
 			continue;
 		}
 
+		alarm(0);
+		sigaction(SIGALRM, &oldsigact, NULL);
+
 		/* Connection is now established.
-		/* Assemble the gained information. */
+		 * Assemble the gained information. */
 		memcpy(&sn, resptr->ai_addr, resptr->ai_addrlen);
 		break;
 	}
