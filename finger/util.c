@@ -398,7 +398,7 @@ prphone(const char *num)
 	char *p;
 	const char *q;
 	int len;
-	static char pbuf[15];
+	static char pbuf[16];
 
 	/* don't touch anything if the user has their own formatting */
 	for (q = num; *q; ++q)

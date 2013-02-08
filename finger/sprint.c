@@ -133,6 +133,7 @@ office:
 			xputc('\n');
 		}
 	}
+	free(list);
 }
 
 static PERSON **sort(void) {

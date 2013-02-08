@@ -178,7 +178,10 @@ int netfinger(const char *name) {
 			/* don't print */
 		}
 		else {
-			if (c == '\n') ateol = 1;
+			if (c == '\n')
+				ateol = 1;
+			else
+				ateol = 0;
 			sawret = 0;
 			xputc(c);
 		}
