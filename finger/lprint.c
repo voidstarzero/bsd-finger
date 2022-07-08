@@ -101,7 +101,7 @@ lprint(PERSON *pn)
 	 *	office, office phone, home phone if available
 	 */
 	xprintf("Login: %-15s\t\t\tName: %s\nDirectory: %-25s",
-		pn->name, pn->realname, pn->dir);
+		pn->name, pn->realname ? pn->realname : "", pn->dir);
 	xprintf("\tShell: %-s\n", *pn->shell ? pn->shell : _PATH_BSHELL);
 
 	/*

@@ -150,6 +150,10 @@ static void userinfo(PERSON *pn, struct passwd *pw) {
 
 		pn->realname = rname;
 	}
+	else {
+		/* allow for the possibility of an empty gecos */
+		pn->realname = NULL;
+	}
 
 	pn->office =      fields[1] ? strdup(fields[1]) : NULL;
 	pn->officephone = fields[2] ? strdup(fields[2]) : NULL;
