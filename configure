@@ -10,6 +10,7 @@ INSTALLROOT=''
 BINMODE='755'
 #DAEMONMODE='$BINMODE'
 MANMODE='644'
+SDMODE='644'
 
 while [ x$1 != x ]; do case $1 in
 
@@ -56,8 +57,9 @@ fi
 BINDIR="$EXECPREFIX/bin"
 SBINDIR="$EXECPREFIX/sbin"
 MANDIR="$PREFIX/share/man"
+SDDIR="$PREFIX/lib/systemd/system"
 
-echo "Directories: $BINDIR $SBINDIR $MANDIR "
+echo "Directories: $BINDIR $SBINDIR $MANDIR $SDDIR"
 
 if [ x$INSTALLROOT != x ]; then
     echo "Installing in chroot tree rooted at $INSTALLROOT"
@@ -286,9 +288,11 @@ echo 'Generating MCONFIG...'
     echo "BINDIR=$BINDIR"
     echo "SBINDIR=$SBINDIR"
     echo "MANDIR=$MANDIR"
+    echo "SDDIR=$SDDIR"
     echo "BINMODE=$BINMODE"
     echo "DAEMONMODE=$DAEMONMODE"
     echo "MANMODE=$MANMODE"
+    echo "SDMODE=$SDMODE"
     echo "PREFIX=$PREFIX"
     echo "EXECPREFIX=$EXECPREFIX"
     echo "INSTALLROOT=$INSTALLROOT"
