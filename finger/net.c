@@ -56,8 +56,11 @@ char net_rcsid[] = "$Id: net.c,v 1.9 1999/09/14 10:51:11 dholland Exp $";
 # define FINGER_TIMEOUT 5
 #endif
 
+#define UNUSED(x) (void)(x)
+
 static void trivial_alarm(int sig) {
 	/* Just to trigger EINTR, and to later use it. */
+	UNUSED(sig);
 	return;
 }
 
