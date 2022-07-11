@@ -74,7 +74,7 @@ lflag_print(void)
 			show_text(pn->dir, _PATH_PGPKEY, "PGP key:\n");
 			show_text(pn->dir, _PATH_PROJECT, "Project:\n");
 			if (!show_text(pn->dir, _PATH_PLAN, "Plan:\n")) {
-				xprintf("No Plan.\n");
+				xprintf("No plan.\n");
 			}
 		}
 		if (!(pn = pn->next))
