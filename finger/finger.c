@@ -136,7 +136,7 @@ int main(int argc, char *argv[]) {
 	 * Also check stdin for nofinger processing, because of older
 	 * fingerds that make stdout a pipe for CRLF handling.
 	 */
-	slen = sizeof(slen); /* For safety: sockaddr_in and sockaddr_in6 */
+	slen = sizeof(sin); /* For safety: sockaddr_in and sockaddr_in6 */
 
 	if (getsockname(STDIN_FILENO, (struct sockaddr *)&sin, &slen)==0) {
 		enable_nofinger = 1;
