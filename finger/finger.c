@@ -62,6 +62,8 @@ char finger_rcsid[] = \
  * mail info, and .plan/.project files.
  */
 
+#define _GNU_SOURCE /* for asprintf */
+
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <sys/socket.h>
@@ -183,10 +185,16 @@ int
 check_nofinger(struct passwd *pw)
 {
 	if (enable_nofinger) {
-		char path[PATH_MAX];
 		struct stat tripe;
-		snprintf(path, sizeof(path), "%s/.nofinger", pw->pw_dir);
-		if (stat(path, &tripe)==0) {
+		int ret;
+		char *path;
+		if (asprintf(&path, "%s/.nofinger", pw->pw_dir) < 0) {
+			eprintf("finger: Out of space.\n");
+			exit(1);
+		}
+		ret = stat(path, &tripe);
+		free(path);
+		if (!ret) {
 			return 1;
 		}
 	}

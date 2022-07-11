@@ -39,6 +39,8 @@
 char util_rcsid[] = "$Id: util.c,v 1.18 1999/09/28 22:53:58 netbug Exp $";
 #endif /* not lint */
 
+#define _GNU_SOURCE /* for asprintf */
+
 #include <sys/types.h>
 /* #include <sys/param.h> <--- unused? */
 #include <sys/stat.h>
@@ -61,6 +63,8 @@ static PERSON *htab[HSIZE];		/* the buckets */
 static int hash(const char *name);
 
 static void find_idle_and_ttywrite(register WHERE *w) {
+	int ret;
+	char *path;
 	struct stat sb;
 
 	/* No device for X console. Utmp entry by XDM login (":0"). */
@@ -69,11 +73,18 @@ static void find_idle_and_ttywrite(register WHERE *w) {
 		w->writable = 0;
 		return;
 	}
-	snprintf(tbuf, TBUFLEN, "%s/%s", _PATH_DEV, w->tty);
-	if (stat(tbuf, &sb) < 0) {
-		eprintf("finger: %s: %s\n", tbuf, strerror(errno));
+
+	if (asprintf(&path, "%s/%s", _PATH_DEV, w->tty) < 0) {
+		eprintf("finger: Out of space.\n");
+		exit(1);
+	}
+	ret = stat(path, &sb);
+	if (ret < 0) {
+		eprintf("finger: %s: %s\n", path, strerror(errno));
+		free(path);
 		return;
 	}
+	free(path);
 	w->idletime = now < sb.st_atime ? 0 : now - sb.st_atime;
 
 #define	TALKABLE	0220		/* tty is writable if 220 mode */
@@ -160,10 +171,17 @@ static void userinfo(PERSON *pn, struct passwd *pw) {
 	pn->mailrecv = -1;		/* -1 == not_valid */
 	pn->mailread = -1;		/* -1 == not_valid */
 
-	snprintf(tbuf, TBUFLEN, "%s/%s", _PATH_MAILDIR, pw->pw_name);
-	if (stat(tbuf, &sb) < 0) {
+	int ret;
+	char *path;
+	if (asprintf(&path, "%s/%s", _PATH_MAILDIR, pw->pw_name) < 0) {
+		eprintf("finger: Out of space.\n");
+		exit(1);
+	}
+	ret = stat(path, &sb);
+	if (ret < 0) {
 		if (errno != ENOENT) {
-			eprintf("finger: %s: %s\n", tbuf, strerror(errno));
+			eprintf("finger: %s: %s\n", path, strerror(errno));
+			free(path);
 			return;
 		}
 	} 
@@ -171,6 +189,7 @@ static void userinfo(PERSON *pn, struct passwd *pw) {
 		pn->mailrecv = sb.st_mtime;
 		pn->mailread = sb.st_atime;
 	}
+	free(path);
 }
 
 int
