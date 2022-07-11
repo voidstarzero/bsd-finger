@@ -52,7 +52,7 @@ char rcsid[] =
 #include <signal.h>
 #include <syslog.h>
 #include <getopt.h>
-#include <netinet/in.h>
+#include <sys/socket.h>
 #include <sys/utsname.h>
 #include <sys/wait.h>
 
