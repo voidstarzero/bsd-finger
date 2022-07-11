@@ -320,8 +320,10 @@ userlist(int argc, char *argv[])
 			xputc('\n');
 	}
 
-	if (entries == 0)
+	if (entries == 0) {
+		free(used);
 		return err;
+	}
 
 	/*
 	 * Scan thru the list of users currently logged in, saving
@@ -350,5 +352,6 @@ userlist(int argc, char *argv[])
 	}
 	endutent();
 
+	free(used);
 	return err;
 }
